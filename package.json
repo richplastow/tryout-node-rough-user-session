@@ -1,0 +1,20 @@
+{
+  "name": "tryout-node-rough-user-session",
+  "version": "0.0.3",
+  "type": "module",
+  "description": "An idea for an API server which uses request headers to roughly (and quickly) infer user sessions",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/richplastow/tryout-node-rough-user-session.git"
+  },
+  "author": "Rich Plastow",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/richplastow/tryout-node-rough-user-session/issues"
+  },
+  "homepage": "https://github.com/richplastow/tryout-node-rough-user-session#readme"
+}
