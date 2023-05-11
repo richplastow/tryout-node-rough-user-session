@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/richplastow/tryout-node-rough-user-session/issues"
   },
-  "homepage": "https://github.com/richplastow/tryout-node-rough-user-session#readme"
+  "homepage": "https://github.com/richplastow/tryout-node-rough-user-session#readme",
+  "devDependencies": {
+    "benchmark": "^2.1.4"
+  }
 }

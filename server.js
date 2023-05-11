@@ -1,6 +1,11 @@
+import { createHash } from 'crypto';
 import http from 'http';
 
+const roughUserSessions = {};
+
 let logHealthCheckIfZero = 1;
+
+// Start the server.
 server();
 
 /**
@@ -13,7 +18,6 @@ function server() {
 
     // Create and start the server.
     http.createServer((req, res) => {
-
         // Deal with a health check request. If health checks are performed
         // every 20 seconds, only log once a day.
         if (req.url === '/') {
@@ -26,8 +30,53 @@ function server() {
             }
         }
 
-        // Any other request is a 400.
-        send400(res, 'oops!');
+        // Get a nanosecond timestamp, before the rough-user-session section..
+        const beforeRus = process.hrtime.bigint();
+
+        // Gather headers which identify a browser set to a particular language.
+        // Headers like "accept", are probably tied to "user-agent".
+        const userAgent = req.headers['user-agent'] || ''; // eg "curl/7.79.1"
+        const acceptLanguage = req.headers['accept-language'] || ''; // eg "en-GB,en;q=0.5"
+
+        // Gather two potential sources of the client's IP address.
+        const xForwardedFor = req.headers['x-forwarded-for'] || '';
+        const socketRemoteAddress = req.socket.remoteAddress || '';
+
+        // Combine the request's 'user-agent' and 'accept-language' headers with
+        // the apparent IP addresses, and get a hash. This will often (but not
+        // always) be the same for multiple requests from the same client.
+        const roughUserSessionHash = createHash('md4').update(
+            xForwardedFor +
+            socketRemoteAddress +
+            userAgent +
+            acceptLanguage
+        ).digest('base64');
+
+        const r0 = roughUserSessionHash[0];
+        const r1 = roughUserSessionHash[1];
+        const r2 = roughUserSessionHash[2];
+        const s0 = roughUserSessions[r0];
+        if (s0) {
+            const s1 = s0[r1];
+            if (s1) {
+                const s2 = s1[r2];
+                if (s2) {
+                    const afterRus = process.hrtime.bigint();
+                    console.log(`${Number(afterRus-beforeRus)/1e6} ms (1)`);
+                    return send200(res, `recognised: ${s2} | ${xForwardedFor} | ${socketRemoteAddress}`);
+                } else {
+                    s1[r2] = [ roughUserSessionHash ];
+                }
+            } else {
+                s0[r1] = { [r2]: [ roughUserSessionHash ] };
+            }
+        } else {
+            roughUserSessions[r0] = { [r1]: { [r2]: [ roughUserSessionHash ] } };
+        }
+
+        const afterRus = process.hrtime.bigint();
+        console.log(`${Number(afterRus-beforeRus)/1e6} ms (2)`);
+        return send200(res, `new session ${roughUserSessionHash} | ${xForwardedFor} | ${socketRemoteAddress}`);
 
     }).listen(
         process.env.PORT || 1234,
